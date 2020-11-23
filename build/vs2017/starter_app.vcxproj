@@ -205,6 +205,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\GameObject.cpp" />
     <ClCompile Include="..\..\main_d3d11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|PSVita'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|PSVita'">true</ExcludedFromBuild>
@@ -217,10 +218,24 @@
     </ClCompile>
     <ClCompile Include="..\..\primitive_builder.cpp" />
     <ClCompile Include="..\..\starter_app.cpp" />
+    <ClCompile Include="..\..\VirtualMarker.cpp" />
+    <ClCompile Include="..\..\VirtualObject.cpp" />
+    <ClCompile Include="..\..\VirtualSystem.cpp" />
+    <ClCompile Include="..\..\VirtualVita.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\GameObject.h" />
     <ClInclude Include="..\..\primitive_builder.h" />
     <ClInclude Include="..\..\starter_app.h" />
+    <ClInclude Include="..\..\VirtualMarker.h" />
+    <ClInclude Include="..\..\VirtualObject.h" />
+    <ClInclude Include="..\..\VirtualSonySample.h" />
+    <ClInclude Include="..\..\VirtualSystem.h" />
+    <ClInclude Include="..\..\VirtualVita.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="starter_app.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

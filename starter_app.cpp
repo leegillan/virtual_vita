@@ -7,6 +7,7 @@
 #include <assets/png_loader.h>
 #include <graphics/image_data.h>
 #include <graphics/font.h>
+#include <graphics/scene.h>
 #include <maths/vector2.h>
 #include <input/input_manager.h>
 #include <input/sony_controller_input_manager.h>
@@ -14,6 +15,9 @@
 #include <maths/math_utils.h>
 #include <graphics/renderer_3d.h>
 
+#include "VirtualSystem.h"
+#include "VirtualSonySample.h"
+#include <vector>
 
 StarterApp::StarterApp(gef::Platform& platform) :
 	Application(platform),
@@ -23,22 +27,71 @@ StarterApp::StarterApp(gef::Platform& platform) :
 {
 }
 
+bool  StarterApp::sampleIsMarkerFound ( int idx )
+{
+	return virtualSystem_->markers_[idx]->active;
+}
+
+
+void StarterApp::sampleGetTransform ( int idx, gef::Matrix44* mat )
+{
+	gef::Matrix44 trans = virtualSystem_->markers_[idx]->marker_transform;
+	gef::Matrix44 vita = virtualSystem_->vita_->camera_lookAt;
+
+	gef::Matrix44 matrix = trans * vita;
+	*mat = matrix;
+
+}
+
 void StarterApp::Init()
 {
 	sprite_renderer_ = gef::SpriteRenderer::Create(platform_);
 	renderer_3d_ = gef::Renderer3D::Create(platform_);
 	input_manager_ = gef::InputManager::Create(platform_);
+	primitive_builder_ = new PrimitiveBuilder ( platform_ );
 
 	InitFont();
 	SetupCamera();
 	SetupLights();
 
-	primitive_builder_ = new PrimitiveBuilder(platform_);
-	player_.set_mesh(primitive_builder_->GetDefaultCubeMesh());
+	virtualSystem_ = new VirtualSystem ();
+	virtualSystem_->Init ( primitive_builder_ );
+
+	testObject_ = new GameObject;
+	testObject_->position_ = gef::Vector4 ( 0.0f, 0.0f, 0.0f );
+	testObject_->scale_ = gef::Vector4 ( 0.05f, 0.05f, 0.05f );
+	testObject_->set_mesh ( primitive_builder_->GetDefaultCubeMesh () );
+
+
+	//////////////////////////////////////////////////////////
+	// initialise sony framework
+	sampleInitialize ();
+	smartInitialize ();
+
+	// reset marker tracking
+	AppData* dat = sampleUpdateBegin ();
+	smartTrackingReset ();
+	sampleUpdateEnd ( dat );
+
+	///////////////////////////////////////////////////////
+
+
+
 }
+
 
 void StarterApp::CleanUp()
 {
+	//////////////////////////////////////////////////////////
+	smartRelease ();
+	sampleRelease ();
+
+	//////////////////////////////////////////////////////////
+
+	virtualSystem_->CleanUp ();
+	delete virtualSystem_;
+	virtualSystem_ = NULL;
+
 	delete primitive_builder_;
 	primitive_builder_ = NULL;
 
@@ -52,51 +105,92 @@ void StarterApp::CleanUp()
 
 	delete renderer_3d_;
 	renderer_3d_ = NULL;
+
+
+
 }
 
 bool StarterApp::Update(float frame_time)
 {
 	fps_ = 1.0f / frame_time;
-
-
 	// read input devices
 	if (input_manager_)
 	{
-		input_manager_->Update();
+		input_manager_->Update ();
 
 		// controller input
-		gef::SonyControllerInputManager* controller_manager = input_manager_->controller_input();
+		gef::SonyControllerInputManager* controller_manager = input_manager_->controller_input ();
 		if (controller_manager)
 		{
 		}
 
 		// keyboard input
-		gef::Keyboard* keyboard = input_manager_->keyboard();
-		if (keyboard)
-		{
-		}
+		gef::Keyboard* keyboard = input_manager_->keyboard ();
+		virtualSystem_->ProcessKeyboardInput ( keyboard, frame_time );
 	}
 
+	virtualSystem_->Update ( frame_time );
+
+	//////////////////////////////////////////////////////////
+	AppData* dat = sampleUpdateBegin ();
+
+	// use the tracking library to try and find markers
+	smartUpdate ( dat->currentImage );
+	sampleUpdateEnd ( dat );
+		
+	// check to see if a particular marker can be found
+	if (sampleIsMarkerFound ( 0 ))
+	{
+		// marker is being tracked, get its transform
+		gef::Matrix44 marker_transform;
+		sampleGetTransform (
+			0,
+			&marker_transform );
+
+		// set the transform of the 3D mesh instance to draw on
+		// top of the marker
+		gef::Matrix44 trans = marker_transform;
+
+		gef::Matrix44 scale;
+		scale.Scale ( gef::Vector4 (0.1f, 0.1f, 0.1f ) );
+		gef::Vector4 position = trans.GetTranslation ();
+		position.set_y ( position.y () + 0.15f );
+		trans = scale * trans;
+		trans.SetTranslation ( position );
+
+
+		testObject_->set_transform ( trans );
+
+	}
+
+
+
+
+	//////////////////////////////////////////////////////////
 
 	return true;
 }
 
 void StarterApp::Render()
 {
+	//////////////////////////////////////////////////////////
+	AppData* dat = sampleRenderBegin ();
+
 	gef::Matrix44 projection_matrix;
-	gef::Matrix44 view_matrix;
 
 	projection_matrix = platform_.PerspectiveProjectionFov(camera_fov_, (float)platform_.width() / (float)platform_.height(), near_plane_, far_plane_);
-	view_matrix.LookAt(camera_eye_, camera_lookat_, camera_up_);
 	renderer_3d_->set_projection_matrix(projection_matrix);
-	renderer_3d_->set_view_matrix(view_matrix);
 
 	// draw meshes here
 	renderer_3d_->Begin();
 
+	virtualSystem_->Render ( renderer_3d_ );
 
-	// draw 3d stuff here
-	renderer_3d_->DrawMesh(player_);
+	gef::Matrix44 view_matrix;
+	view_matrix.SetIdentity ();
+	renderer_3d_->set_view_matrix ( view_matrix );
+
+	renderer_3d_->DrawMesh ( *testObject_ );
 
 	renderer_3d_->End();
 
@@ -105,6 +199,11 @@ void StarterApp::Render()
 	sprite_renderer_->Begin(false);
 	DrawHUD();
 	sprite_renderer_->End();
+
+
+
+	sampleRenderEnd ();
+	//////////////////////////////////////////////////////////
 }
 void StarterApp::InitFont()
 {
@@ -124,6 +223,7 @@ void StarterApp::DrawHUD()
 	{
 		// display frame rate
 		font_->RenderText(sprite_renderer_, gef::Vector4(850.0f, 510.0f, -0.9f), 1.0f, 0xffffffff, gef::TJ_LEFT, "FPS: %.1f", fps_);
+		
 	}
 }
 
@@ -141,7 +241,7 @@ void StarterApp::SetupLights()
 void StarterApp::SetupCamera()
 {
 	// initialise the camera settings
-	camera_eye_ = gef::Vector4(5.0f, 5.0f, 5.0f);
+	camera_eye_ = gef::Vector4(5.0f, 5.0f, 215.0f);
 	camera_lookat_ = gef::Vector4(0.0f, 0.0f, 0.0f);
 	camera_up_ = gef::Vector4(0.0f, 1.0f, 0.0f);
 	camera_fov_ = gef::DegToRad(45.0f);
@@ -149,3 +249,79 @@ void StarterApp::SetupCamera()
 	far_plane_ = 100.f;
 }
 
+void StarterApp::UpdateCamera ()
+{
+	// initialise the camera settings
+	camera_eye_ = gef::Vector4 ( 1.5f, 1.0f, 1.5f );
+	camera_lookat_ = gef::Vector4 ( 0.0f, 0.0f, 0.0f );
+	camera_up_ = gef::Vector4 ( 0.0f, 1.0f, 0.0f );
+	camera_fov_ = gef::DegToRad ( 45.0f );
+	near_plane_ = 0.01f;
+	far_plane_ = 1000.f;
+}
+
+gef::Mesh* StarterApp::GetFirstMesh ( gef::Scene* scene )
+{
+	gef::Mesh* mesh = NULL;
+
+	if (scene)
+	{
+		// now check to see if there is any mesh data in the file, if so lets create a mesh from it
+		if (scene->mesh_data.size () > 0)
+			mesh = scene->CreateMesh ( platform_, scene->mesh_data.front () );
+	}
+
+	return mesh;
+}
+
+
+void StarterApp::ReadSceneAndAssignFirstMesh ( const char* filename, gef::Scene** scene, gef::Mesh** mesh )
+{
+	gef::Scene* scn = new gef::Scene;
+	scn->ReadSceneFromFile ( platform_, filename );
+
+	// we do want to render the data stored in the scene file so lets create the materials from the material data present in the scene file
+	scn->CreateMaterials ( platform_ );
+
+	*mesh = GetFirstMesh ( scn );
+	*scene = scn;
+}
+
+bool StarterApp::IsColliding_SphereToSphere ( const gef::MeshInstance& meshInstance1, const gef::MeshInstance& meshInstance2 )
+{
+	gef::Sphere sphere1 = meshInstance1.mesh ()->bounding_sphere ();
+	gef::Sphere sphere2 = meshInstance2.mesh ()->bounding_sphere ();
+
+	gef::Sphere sphere1_transformed = sphere1.Transform ( meshInstance1.transform () );
+	gef::Sphere sphere2_transformed = sphere2.Transform ( meshInstance2.transform () );
+
+	gef::Vector4 offset = sphere1_transformed.position () - sphere2_transformed.position ();
+	float distance = sqrtf(offset.x() * offset.x() + offset.y() * offset.y() + offset.z() * offset.z());
+	float combined_radii = sphere1_transformed.radius () + sphere2_transformed.radius ();
+
+	return distance < combined_radii;
+}
+
+
+bool StarterApp::IsColliding_AABBToAABB ( const gef::MeshInstance& meshInstance1, const gef::MeshInstance& meshInstance2 )
+{
+	gef::Aabb Aabb1 = meshInstance1.mesh ()->aabb ();
+	gef::Aabb Aabb2 = meshInstance2.mesh ()->aabb ();
+
+	gef::Aabb Aabb1_t = Aabb1.Transform ( meshInstance1.transform () );
+	gef::Aabb Aabb2_t = Aabb2.Transform ( meshInstance2.transform () );
+
+	if (Aabb1_t.max_vtx ().x () > Aabb2_t.min_vtx ().x () &&
+		Aabb1_t.min_vtx ().x () < Aabb2_t.max_vtx ().x () &&
+		Aabb1_t.max_vtx ().y () > Aabb2_t.min_vtx ().y () &&
+		Aabb1_t.min_vtx ().y () < Aabb2_t.max_vtx ().y () &&
+		Aabb1_t.max_vtx ().z () > Aabb2_t.min_vtx ().z () &&
+		Aabb1_t.min_vtx ().z () < Aabb2_t.max_vtx ().z ()
+		)
+	{
+		return true;
+	}
+
+	return false;
+
+}

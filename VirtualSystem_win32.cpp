@@ -48,7 +48,7 @@ void VirtualSystemWin32::Init ( PrimitiveBuilder* primitive_builder )
 		markers_.push_back ( marker );
 	}
 
-	controlObject_ = vita_;
+	controlObject_ = markers_[0];
 	primitive_builder_ = primitive_builder;
 }
 

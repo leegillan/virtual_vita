@@ -29,18 +29,12 @@ StarterApp::StarterApp(gef::Platform& platform) :
 
 bool  StarterApp::sampleIsMarkerFound ( int idx )
 {
-	return virtualSystem_->markers_[idx]->active;
+	return virtualSystem_->IsMarkerFound(idx);
 }
-
 
 void StarterApp::sampleGetTransform ( int idx, gef::Matrix44* mat )
 {
-	gef::Matrix44 trans = virtualSystem_->markers_[idx]->marker_transform;
-	gef::Matrix44 vita = virtualSystem_->vita_->camera_lookAt;
-
-	gef::Matrix44 matrix = trans * vita;
-	*mat = matrix;
-
+	virtualSystem_->GetMarkerTransform ( idx, mat );
 }
 
 void StarterApp::Init()
@@ -54,14 +48,18 @@ void StarterApp::Init()
 	SetupCamera();
 	SetupLights();
 
-	virtualSystem_ = new VirtualSystem ();
+	virtualSystem_ = VirtualSystem::Create ();
 	virtualSystem_->Init ( primitive_builder_ );
+
+	////////////////////////////////////////////////////////////
+	// GAME LOGIC //////////////
 
 	testObject_ = new GameObject;
 	testObject_->position_ = gef::Vector4 ( 0.0f, 0.0f, 0.0f );
-	testObject_->scale_ = gef::Vector4 ( 0.05f, 0.05f, 0.05f );
-	testObject_->set_mesh ( primitive_builder_->GetDefaultCubeMesh () );
-
+	//testObject_->scale_ = gef::Vector4 ( 0.05f, 0.05f, 0.05f );
+	testObject_->scale_ = gef::Vector4 ( 1.0f, 1.0f, 1.0f );
+	//testObject_->set_mesh ( primitive_builder_->GetDefaultCubeMesh () );
+	testObject_->set_mesh ( primitive_builder_->CreateBoxMesh ( gef::Vector4 ( 0.059f, 0.059f, 0.001f ), gef::Vector4 ( 0.0f, 0.0f, 0.0f ) ) );
 
 	//////////////////////////////////////////////////////////
 	// initialise sony framework
@@ -85,6 +83,12 @@ void StarterApp::CleanUp()
 	//////////////////////////////////////////////////////////
 	smartRelease ();
 	sampleRelease ();
+
+	////////////////////////////////////////////////////////////
+	// GAME LOGIC //////////////
+	delete testObject_;
+	testObject_ = NULL;
+
 
 	//////////////////////////////////////////////////////////
 
@@ -138,31 +142,50 @@ bool StarterApp::Update(float frame_time)
 	smartUpdate ( dat->currentImage );
 	sampleUpdateEnd ( dat );
 		
-	// check to see if a particular marker can be found
-	if (sampleIsMarkerFound ( 0 ))
+	////////////////////////////////////////////////////////////
+	// GAME LOGIC //////////////
+
+	//// check to see if a particular marker can be found
+	//if (sampleIsMarkerFound ( 0 ))
+	//{
+	//	// marker is being tracked, get its transform
+	//	gef::Matrix44 marker_transform;
+	//	sampleGetTransform (
+	//		0,
+	//		&marker_transform );
+
+	//	// set the transform of the 3D mesh instance to draw on
+	//	// top of the marker
+	//	gef::Matrix44 trans = marker_transform;
+
+	//	gef::Matrix44 scale;
+	//	scale.Scale ( gef::Vector4 (0.1f, 0.1f, 0.1f ) );
+	//	gef::Vector4 position = trans.GetTranslation ();
+	//	position.set_y ( position.y () + 0.15f );
+	//	trans = scale * trans;
+	//	trans.SetTranslation ( position );
+
+
+	//	testObject_->set_transform ( trans );
+
+	//}
+
+	for (int i = 0; i < 6; i++)
 	{
-		// marker is being tracked, get its transform
-		gef::Matrix44 marker_transform;
-		sampleGetTransform (
-			0,
-			&marker_transform );
+		if (sampleIsMarkerFound ( i ))
+		{
+			// marker is being tracked, get its transform
+			gef::Matrix44 marker_transform;
+			sampleGetTransform ( i, &marker_transform );
+			// set the transform of the 3D mesh instance to draw on
+			// top of the marker
+			gef::Vector4 position = marker_transform.GetTranslation ();
+			position.set_y ( position.y () + 0.10f );
+			marker_transform.SetTranslation ( position );
 
-		// set the transform of the 3D mesh instance to draw on
-		// top of the marker
-		gef::Matrix44 trans = marker_transform;
-
-		gef::Matrix44 scale;
-		scale.Scale ( gef::Vector4 (0.1f, 0.1f, 0.1f ) );
-		gef::Vector4 position = trans.GetTranslation ();
-		position.set_y ( position.y () + 0.15f );
-		trans = scale * trans;
-		trans.SetTranslation ( position );
-
-
-		testObject_->set_transform ( trans );
-
+			testObject_->set_transform ( marker_transform );
+		}
 	}
-
 
 
 
@@ -183,14 +206,20 @@ void StarterApp::Render()
 
 	// draw meshes here
 	renderer_3d_->Begin();
-
 	virtualSystem_->Render ( renderer_3d_ );
 
 	gef::Matrix44 view_matrix;
 	view_matrix.SetIdentity ();
 	renderer_3d_->set_view_matrix ( view_matrix );
 
+	////////////////////////////////////////////////////////////
+	// GAME LOGIC //////////////
+
+
 	renderer_3d_->DrawMesh ( *testObject_ );
+
+	////////////////////////////////////////////////////////////
+
 
 	renderer_3d_->End();
 

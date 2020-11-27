@@ -221,6 +221,18 @@
     <ClCompile Include="..\..\VirtualMarker.cpp" />
     <ClCompile Include="..\..\VirtualObject.cpp" />
     <ClCompile Include="..\..\VirtualSystem.cpp" />
+    <ClCompile Include="..\..\VirtualSystem_vita.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|PSVita'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|PSVita'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\VirtualSystem_win32.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|PSVita'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|PSVita'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\VirtualVita.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -231,6 +243,18 @@
     <ClInclude Include="..\..\VirtualObject.h" />
     <ClInclude Include="..\..\VirtualSonySample.h" />
     <ClInclude Include="..\..\VirtualSystem.h" />
+    <ClInclude Include="..\..\VirtualSystem_vita.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|PSVita'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|PSVita'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\VirtualSystem_win32.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|PSVita'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|PSVita'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\VirtualVita.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

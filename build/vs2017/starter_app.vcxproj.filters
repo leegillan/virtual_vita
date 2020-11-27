@@ -48,6 +48,12 @@
     <ClCompile Include="..\..\VirtualVita.cpp">
       <Filter>Source Files\VirtualSystem</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\VirtualSystem_vita.cpp">
+      <Filter>Source Files\VirtualSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\VirtualSystem_win32.cpp">
+      <Filter>Source Files\VirtualSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\primitive_builder.h">
@@ -75,6 +81,12 @@
       <Filter>Header Files\VirtualSystem</Filter>
     </ClInclude>
     <ClInclude Include="..\..\VirtualSonySample.h">
+      <Filter>Header Files\VirtualSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VirtualSystem_win32.h">
+      <Filter>Header Files\VirtualSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VirtualSystem_vita.h">
       <Filter>Header Files\VirtualSystem</Filter>
     </ClInclude>
   </ItemGroup>

@@ -10,6 +10,8 @@ public:
 	bool active;
 	int markerID;
 	gef::Matrix44 marker_transform;
+	float rotation;
+	float rotationalAccelaration;
 };
 
 #pragma once

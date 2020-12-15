@@ -10,6 +10,7 @@
 #include <graphics/mesh_instance.h>
 #include "primitive_builder.h"
 #include "GameObject.h"
+#include "Game.h"
 
 // FRAMEWORK FORWARD DECLARATIONS
 namespace gef
@@ -40,11 +41,13 @@ private:
 	void DrawHUD();
 	void SetupLights();
 	void SetupCamera();
-	void AdvanceControl ();
-	void ProcessKeyboardInput ( gef::Keyboard* keyboard, float frame_time );
+	void AdvanceControl();
+	void ProcessKeyboardInput(gef::Keyboard* keyboard, float frame_time);
 	bool sampleIsMarkerFound ( int idx );
 	void sampleGetTransform ( int idx, gef::Matrix44* mat );
 	void UpdateCamera ();
+
+	void UpdateGame(float frame_time);
 
 	gef::Mesh* GetFirstMesh ( gef::Scene* scene );
 	void ReadSceneAndAssignFirstMesh ( const char* filename, gef::Scene** scene, gef::Mesh** mesh );
@@ -66,13 +69,19 @@ private:
 	float far_plane_;
 
 	GameObject* testObject_;
+	GameObject* laserBox;
+	GameObject* target;
 
+	int laserMarkerID;
+	int targetMarkerID;
 
 	VirtualSystem* virtualSystem_;
 
 	bool isColliding;
 
 	PrimitiveBuilder* primitive_builder_;
+
+	Game game;
 };
 
 #endif // _STARTER_APP_H

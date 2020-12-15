@@ -30,7 +30,7 @@
     <ProjectGuid>{E10EAFBA-8040-483F-BCE8-D31D2545AC1B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>starter_app</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -234,6 +234,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|PSVita'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\VirtualVita.cpp" />
+    <ClCompile Include="Game.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\GameObject.h" />
@@ -256,6 +257,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|PSVita'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\VirtualVita.h" />
+    <ClInclude Include="Game.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

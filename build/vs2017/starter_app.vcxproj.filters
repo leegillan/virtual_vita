@@ -54,6 +54,9 @@
     <ClCompile Include="..\..\VirtualSystem_win32.cpp">
       <Filter>Source Files\VirtualSystem</Filter>
     </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\primitive_builder.h">
@@ -88,6 +91,9 @@
     </ClInclude>
     <ClInclude Include="..\..\VirtualSystem_vita.h">
       <Filter>Header Files\VirtualSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -26,14 +26,14 @@ void VirtualSystemWin32::Init ( PrimitiveBuilder* primitive_builder )
 	float deskWidth = 2.0f;
 	float deskHeight = 0.1f;
 	desk_ = new VirtualObject;
-	desk_->position_ = gef::Vector4 ( 0.0f, 0.0f, 0.0f );
-	desk_->scale_ = gef::Vector4 ( deskLength, deskWidth, deskHeight );
-	desk_->set_mesh ( primitive_builder->GetDefaultCubeMesh () );
+	desk_->SetPosition(gef::Vector4(0.0f, 0.0f, 0.0f));
+	desk_->SetScale(gef::Vector4(deskLength, deskWidth, deskHeight));
+	desk_->set_mesh(primitive_builder->GetDefaultCubeMesh());
 
 	vita_ = new VirtualVita ();
-	vita_->position_ = gef::Vector4 ( 0.0f, 1.0f, 0.75f );
-	vita_->scale_ = gef::Vector4 ( 0.2f, 0.02f, 0.1f );
-	vita_->set_mesh ( primitive_builder->GetDefaultCubeMesh () );
+	vita_->SetPosition(gef::Vector4(0.0f, 1.0f, 0.75f));
+	vita_->SetScale(gef::Vector4(0.2f, 0.02f, 0.1f));
+	vita_->set_mesh(primitive_builder->GetDefaultCubeMesh());
 
 	const int num_markers = 6;
 
@@ -42,8 +42,8 @@ void VirtualSystemWin32::Init ( PrimitiveBuilder* primitive_builder )
 		VirtualMarker *marker = new VirtualMarker;
 		marker->active = i == 0;
 		marker->markerID = i;
-		marker->position_ = gef::Vector4 ( -0.5f + (0.2f * i), 0.0f, 0.05f );
-		marker->scale_ = gef::Vector4 ( 0.059f, 0.059f, 0.01f );
+		marker->SetPosition(gef::Vector4(-0.5f + (0.2f * i), 0.0f, 0.05f));
+		marker->SetScale(gef::Vector4(0.059f, 0.059f, 0.01f));
 		marker->set_mesh ( primitive_builder->GetDefaultCubeMesh () );
 		markers_.push_back ( marker );
 	}
@@ -171,7 +171,7 @@ void VirtualSystemWin32::AdvanceControl ()
 }
 
 
-void VirtualSystemWin32::ProcessKeyboardInput ( gef::Keyboard* keyboard, float frame_time )
+void VirtualSystemWin32::ProcessKeyboardInput(gef::Keyboard* keyboard, float frame_time)
 {
 	if (keyboard)
 	{
@@ -179,25 +179,25 @@ void VirtualSystemWin32::ProcessKeyboardInput ( gef::Keyboard* keyboard, float f
 		if (keyboard->IsKeyDown ( gef::Keyboard::KC_W ))
 		{
 			gef::Keyboard::KC_LSHIFT;
-			controlObject_->velocity_ += gef::Vector4 ( 0.0f, -accel, 0.0f ) * frame_time;
+			controlObject_->velocity += gef::Vector4(0.0f, -accel, 0.0f) * frame_time;
 		}
 		if (keyboard->IsKeyDown ( gef::Keyboard::KC_A ))
 		{
-			controlObject_->velocity_ += gef::Vector4 ( accel, 0.0f, 0.0f ) * frame_time;
+			controlObject_->velocity += gef::Vector4(accel, 0.0f, 0.0f) * frame_time;
 		}
 		if (keyboard->IsKeyDown ( gef::Keyboard::KC_S ))
 		{
-			controlObject_->velocity_ += gef::Vector4 ( 0.0f, accel, 0.0f ) * frame_time;
+			controlObject_->velocity += gef::Vector4(0.0f, accel, 0.0f ) * frame_time;
 		}
 		if (keyboard->IsKeyDown ( gef::Keyboard::KC_D ))
 		{
-			controlObject_->velocity_ += gef::Vector4 ( -accel, 0.0f, 0.0f ) * frame_time;
+			controlObject_->velocity += gef::Vector4(-accel, 0.0f, 0.0f) * frame_time;
 		}
 		if (keyboard->IsKeyDown ( gef::Keyboard::KC_Q ))
 		{
 			if (controlObject_ == vita_)
 			{
-				controlObject_->velocity_ += gef::Vector4 ( 0.0f, 0.0f, accel ) * frame_time;
+				controlObject_->velocity += gef::Vector4(0.0f, 0.0f, accel) * frame_time;
 			}
 			else
 			{
@@ -209,7 +209,7 @@ void VirtualSystemWin32::ProcessKeyboardInput ( gef::Keyboard* keyboard, float f
 		{
 			if (controlObject_ == vita_)
 			{
-				controlObject_->velocity_ += gef::Vector4 ( 0.0f, 0.0f, -accel ) * frame_time;
+				controlObject_->velocity += gef::Vector4(0.0f, 0.0f, -accel) * frame_time;
 			}
 			else
 			{
@@ -262,7 +262,6 @@ bool  VirtualSystemWin32::IsMarkerFound ( int idx )
 	return markers_[idx]->active;
 }
 
-
 void VirtualSystemWin32::GetMarkerTransform ( int idx, gef::Matrix44* mat )
 {
 	gef::Matrix44 trans = markers_[idx]->marker_transform;
@@ -270,5 +269,4 @@ void VirtualSystemWin32::GetMarkerTransform ( int idx, gef::Matrix44* mat )
 
 	gef::Matrix44 matrix = trans * vita;
 	*mat = matrix;
-
 }

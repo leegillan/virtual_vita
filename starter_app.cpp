@@ -27,7 +27,7 @@ StarterApp::StarterApp(gef::Platform& platform) :
 {
 }
 
-bool  StarterApp::sampleIsMarkerFound ( int idx )
+bool StarterApp::sampleIsMarkerFound ( int idx )
 {
 	return virtualSystem_->IsMarkerFound(idx);
 }
@@ -52,14 +52,25 @@ void StarterApp::Init()
 	virtualSystem_->Init ( primitive_builder_ );
 
 	////////////////////////////////////////////////////////////
-	// GAME LOGIC //////////////
+	// GAME LOGIC //////////////-====
+	game.Init();
 
 	testObject_ = new GameObject;
-	testObject_->position_ = gef::Vector4 ( 0.0f, 0.0f, 0.0f );
+	testObject_->SetPosition(gef::Vector4(0.0f, 0.0f, 0.0f));
 	//testObject_->scale_ = gef::Vector4 ( 0.05f, 0.05f, 0.05f );
-	testObject_->scale_ = gef::Vector4 ( 1.0f, 1.0f, 1.0f );
+	testObject_->SetScale(gef::Vector4(1.0f, 1.0f, 1.0f));
 	//testObject_->set_mesh ( primitive_builder_->GetDefaultCubeMesh () );
-	testObject_->set_mesh ( primitive_builder_->CreateBoxMesh ( gef::Vector4 ( 0.059f, 0.059f, 0.001f ), gef::Vector4 ( 0.0f, 0.0f, 0.0f ) ) );
+	testObject_->set_mesh(primitive_builder_->CreateBoxMesh(gef::Vector4(0.059f, 0.059f, 0.001f), gef::Vector4(0.0f, 0.0f, 0.0f)));
+
+	laserBox = new GameObject;
+	laserBox->set_mesh(primitive_builder_->CreateBoxMesh(gef::Vector4(0.0295f, 0.0295f, 0.0295f), gef::Vector4(0.0f, 0.0f, 0.0f)));
+	laserBox->SetPosition(gef::Vector4(0.0f, 0.0f, 0.0f));
+	laserBox->SetScale(gef::Vector4(0.5f, 0.5f, 1.0f));
+
+	target = new GameObject;
+	target->set_mesh(primitive_builder_->CreateBoxMesh(gef::Vector4(0.0295f, 0.0295f, 0.0295f), gef::Vector4(0.0f, 0.0f, 0.0f)));
+	target->SetPosition(gef::Vector4(0.0f, 0.0f, 0.0f));
+	target->SetScale(gef::Vector4(1.0f, 0.2f, 1.0f));
 
 	//////////////////////////////////////////////////////////
 	// initialise sony framework
@@ -72,11 +83,7 @@ void StarterApp::Init()
 	sampleUpdateEnd ( dat );
 
 	///////////////////////////////////////////////////////
-
-
-
 }
-
 
 void StarterApp::CleanUp()
 {
@@ -89,7 +96,11 @@ void StarterApp::CleanUp()
 	delete testObject_;
 	testObject_ = NULL;
 
+	delete laserBox;
+	laserBox = NULL;
 
+	delete target;
+	target = NULL;
 	//////////////////////////////////////////////////////////
 
 	virtualSystem_->CleanUp ();
@@ -109,14 +120,12 @@ void StarterApp::CleanUp()
 
 	delete renderer_3d_;
 	renderer_3d_ = NULL;
-
-
-
 }
 
 bool StarterApp::Update(float frame_time)
 {
 	fps_ = 1.0f / frame_time;
+
 	// read input devices
 	if (input_manager_)
 	{
@@ -170,28 +179,66 @@ bool StarterApp::Update(float frame_time)
 
 	//}
 
-	for (int i = 0; i < 6; i++)
+
+	//TODO: Move game code into class
+	//TODO: Call update functions from here
+
+	switch (game.GetGameState())
 	{
-		if (sampleIsMarkerFound ( i ))
-		{
-			// marker is being tracked, get its transform
-			gef::Matrix44 marker_transform;
-			sampleGetTransform ( i, &marker_transform );
-			// set the transform of the 3D mesh instance to draw on
-			// top of the marker
-			gef::Vector4 position = marker_transform.GetTranslation ();
-			position.set_y ( position.y () + 0.10f );
-			marker_transform.SetTranslation ( position );
+		case MAINMENU:
+			break;
 
-			testObject_->set_transform ( marker_transform );
-		}
+		case GAME: 
+			UpdateGame(frame_time);
+			break;
+
+		case SETTINGS:
+			break;
 	}
-
-
-
 	//////////////////////////////////////////////////////////
 
 	return true;
+}
+
+void StarterApp::UpdateGame(float frame_time)
+{
+
+	for (int i = 0; i < 6; i++)
+	{
+		if (sampleIsMarkerFound(i))
+		{
+			// marker is being tracked, get its transform
+			gef::Matrix44 marker_transform;
+			sampleGetTransform(i, &marker_transform);
+
+			// set the transform of the 3D mesh instance to draw on
+			// top of the marker
+			gef::Vector4 position = marker_transform.GetTranslation();
+			position.set_y(position.y() + 0.10f);
+			marker_transform.SetTranslation(position);
+
+			switch (i)
+			{
+			case 0:
+				laserBox->set_transform(marker_transform);
+
+				laserBox->Update(frame_time, marker_transform);
+				break;
+			case 1:
+				target->set_transform(marker_transform);
+
+				target->Update(frame_time, marker_transform);
+				break;
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			default:
+				break;
+			}
+		}
+	}
 }
 
 void StarterApp::Render()
@@ -215,11 +262,10 @@ void StarterApp::Render()
 	////////////////////////////////////////////////////////////
 	// GAME LOGIC //////////////
 
-
-	renderer_3d_->DrawMesh ( *testObject_ );
+	renderer_3d_->DrawMesh(*laserBox);
+	renderer_3d_->DrawMesh(*target);
 
 	////////////////////////////////////////////////////////////
-
 
 	renderer_3d_->End();
 
@@ -228,7 +274,6 @@ void StarterApp::Render()
 	sprite_renderer_->Begin(false);
 	DrawHUD();
 	sprite_renderer_->End();
-
 
 
 	sampleRenderEnd ();
